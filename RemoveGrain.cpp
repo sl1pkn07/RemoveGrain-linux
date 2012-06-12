@@ -37,7 +37,7 @@
 #include "avxsynth.h"
 #include "planar.h"
 
-static	IScriptEnvironment	*AVSenvironment;
+static	avxsynth::IScriptEnvironment	*AVSenvironment;
 
 #ifdef	SSE2_TEST
 #ifndef	ISSE
@@ -78,7 +78,7 @@ void	debug_printf(const char *format, ...)
 
 #define	COMPARE_MASK	(~24)
 
-static	void CompareVideoInfo(VideoInfo &vi1, const VideoInfo &vi2, const char *progname)
+static	void CompareVideoInfo(avxsynth::VideoInfo &vi1, const avxsynth::VideoInfo &vi2, const char *progname)
 {	
 	if( (vi1.width != vi2.width) || (vi1.height != vi2.height) || ( (vi1.pixel_type & COMPARE_MASK) != (vi2.pixel_type & COMPARE_MASK) ))
 	{
@@ -4116,7 +4116,7 @@ class	RemoveGrain : public GenericVideoFilter, public PlanarAccess
 
 private:
 
-	PVideoFrame __stdcall GetFrame(int n, IScriptEnvironment* env)
+	PVideoFrame __stdcall GetFrame(int n, avxsynth::IScriptEnvironment* env)
 	{
 		PVideoFrame sf = child->GetFrame(n, env);
 #ifdef	MODIFYPLUGIN
@@ -4198,7 +4198,7 @@ public:
 };
 
 
-AVSValue __cdecl CreateRemoveGrain(AVSValue args, void* user_data, IScriptEnvironment* env)
+AVSValue __cdecl CreateRemoveGrain(AVSValue args, void* user_data, avxsynth::IScriptEnvironment* env)
 {
 #ifdef	MODIFYPLUGIN
 	enum ARGS { CLIP, OCLIP, MY, MU, MV, PLANAR};
@@ -4274,7 +4274,7 @@ class	TemporalRepair : public GenericVideoFilter, public PlanarAccess
 	unsigned		last_frame;
 	PClip			orig;
 	
-	PVideoFrame __stdcall GetFrame(int n, IScriptEnvironment* env)
+	PVideoFrame __stdcall GetFrame(int n, avxsynth::IScriptEnvironment* env)
 	{
 		if( ((unsigned)(n - 1) >= last_frame) ) return child->GetFrame(n, env);
 		PVideoFrame	pf = orig->GetFrame(n - 1, env);
@@ -4687,7 +4687,7 @@ class SmoothTemporalRepair : public GenericVideoFilter, public PlanarAccess
 	int		height2[3], hblocks[3], remainder[3];
 	unsigned		last_frame;
 
-	PVideoFrame __stdcall GetFrame(int n, IScriptEnvironment* env)
+	PVideoFrame __stdcall GetFrame(int n, avxsynth::IScriptEnvironment* env)
 	{
 		if( ((unsigned)(n - 1) >= last_frame) ) return child->GetFrame(n, env);
 		PVideoFrame sf = child->GetFrame(n, env);
@@ -4709,7 +4709,7 @@ class SmoothTemporalRepair : public GenericVideoFilter, public PlanarAccess
 		return df;
 	}
 public:
-	SmoothTemporalRepair(PClip clip, PClip _oclip, bool grey, int smooth, bool planar, IScriptEnvironment* env) : GenericVideoFilter(clip), PlanarAccess(vi), oclip(_oclip, grey, env)
+	SmoothTemporalRepair(PClip clip, PClip _oclip, bool grey, int smooth, bool planar, avxsynth::IScriptEnvironment* env) : GenericVideoFilter(clip), PlanarAccess(vi), oclip(_oclip, grey, env)
 	{
 		if( vi.IsYV12() + planar == 0 ) AVSenvironment->ThrowError("TemporalRepair: only planar color spaces are supported");
 		CompareVideoInfo(vi, _oclip->GetVideoInfo(), "TemporalRepair");
@@ -4751,7 +4751,7 @@ public:
 	//~SmoothTemporalRepair(){}
 };
 
-AVSValue __cdecl CreateTemporalRepair(AVSValue args, void* user_data, IScriptEnvironment* env)
+AVSValue __cdecl CreateTemporalRepair(AVSValue args, void* user_data, avxsynth::IScriptEnvironment* env)
 {
 	enum ARGS { CLIP, OCLIP, SMOOTH, GREY, PLANAR };
 	PClip	clip = args[CLIP].AsClip();
@@ -4917,7 +4917,7 @@ class	Clense : public GenericClense
 	unsigned		lnr;
 	bool			reduceflicker;
 
-	PVideoFrame __stdcall GetFrame(int n, IScriptEnvironment* env)
+	PVideoFrame __stdcall GetFrame(int n, avxsynth::IScriptEnvironment* env)
 	{
 		if( !reduceflicker || (lnr != n-1) )
 		{
@@ -4948,7 +4948,7 @@ public:
 	//~Clense(){}
 };
 
-AVSValue __cdecl CreateClense(AVSValue args, void* user_data, IScriptEnvironment* env)
+AVSValue __cdecl CreateClense(AVSValue args, void* user_data, avxsynth::IScriptEnvironment* env)
 {
 	enum ARGS { CLIP, GREY, FLICKER, PLANAR, CACHE };
 	return new Clense(args[CLIP].AsClip(), args[GREY].AsBool(false), args[FLICKER].AsBool(true), args[PLANAR].AsBool(false), args[CACHE].AsInt(2));
@@ -4958,7 +4958,7 @@ class	BMCClense : public GenericClense
 {
 	PClip			pclip, nclip;
 
-	PVideoFrame __stdcall GetFrame(int n, IScriptEnvironment* env)
+	PVideoFrame __stdcall GetFrame(int n, avxsynth::IScriptEnvironment* env)
 	{
 		PVideoFrame	pf = pclip->GetFrame(n, env);
 		PVideoFrame	sf = child->GetFrame(n, env);
@@ -4985,7 +4985,7 @@ public:
 	//~BMCClense(){}
 };
 
-AVSValue __cdecl CreateMCClense(AVSValue args, void* user_data, IScriptEnvironment* env)
+AVSValue __cdecl CreateMCClense(AVSValue args, void* user_data, avxsynth::IScriptEnvironment* env)
 {
 	return new BMCClense(args[0].AsClip(), args[1].AsClip(), args[2].AsClip(), args[3].AsBool(false), args[4].AsBool(false));
 };
@@ -5140,7 +5140,7 @@ static void sclense(BYTE *dp, int dpitch, const BYTE *_sp, int spitch, const BYT
 
 class	BackwardClense : public GenericClense
 {	
-	PVideoFrame __stdcall GetFrame(int n, IScriptEnvironment* env)
+	PVideoFrame __stdcall GetFrame(int n, avxsynth::IScriptEnvironment* env)
 	{
 		PVideoFrame	sf = child->GetFrame(n, env);
 		if( n < 2 ) return sf;
@@ -5166,7 +5166,7 @@ public:
 class	ForwardClense : public BackwardClense
 {	
 	int	lastnr;
-	PVideoFrame __stdcall GetFrame(int n, IScriptEnvironment* env)
+	PVideoFrame __stdcall GetFrame(int n, avxsynth::IScriptEnvironment* env)
 	{
 		PVideoFrame	sf = child->GetFrame(n, env);
 		if( n >= lastnr ) return sf;
@@ -5189,13 +5189,13 @@ public:
 
 char	clenseargs[] ="c[grey]b[planar]b[cache]i";
 
-AVSValue __cdecl CreateBackwardClense(AVSValue args, void* user_data, IScriptEnvironment* env)
+AVSValue __cdecl CreateBackwardClense(AVSValue args, void* user_data, avxsynth::IScriptEnvironment* env)
 {
 	enum ARGS { CLIP, GREY, PLANAR, CACHE };
 	return new BackwardClense(args[CLIP].AsClip(), args[GREY].AsBool(false), args[PLANAR].AsBool(false), args[CACHE].AsInt(2));
 };
 
-AVSValue __cdecl CreateForwardClense(AVSValue args, void* user_data, IScriptEnvironment* env)
+AVSValue __cdecl CreateForwardClense(AVSValue args, void* user_data, avxsynth::IScriptEnvironment* env)
 {
 	enum ARGS { CLIP, GREY, PLANAR, CACHE };
 	return new ForwardClense(args[CLIP].AsClip(), args[GREY].AsBool(false), args[PLANAR].AsBool(false), args[CACHE].AsInt(2));
@@ -5205,7 +5205,7 @@ AVSValue __cdecl CreateForwardClense(AVSValue args, void* user_data, IScriptEnvi
 
 #endif // MODIFYPLUGIN
 
-extern "C" __declspec(dllexport) const char* __stdcall AvisynthPluginInit2(IScriptEnvironment* env)
+extern "C" __declspec(dllexport) const char* __stdcall AvisynthPluginInit2(avxsynth::IScriptEnvironment* env)
 {
 #ifdef	MODIFYPLUGIN
 #ifdef	DEBUG_NAME
