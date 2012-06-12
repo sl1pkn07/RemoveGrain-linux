@@ -22,7 +22,7 @@
 //#define	DEBUG_NAME		// for debugging
 //#define	ISSE	2		// P4, Athlon 64, Sempron 3100
 //#define	ISSE	3		// Prescott P4	
-//#define	CVERSION		// for debugging only
+#define	CVERSION		// for debugging only
 #define	ALIGNPITCH
 #define	SMOOTH2
 
@@ -72,7 +72,7 @@ void	debug_printf(const char *format, ...)
 	va_start(args, format);
 	vsprintf(buffer, format, args);
 	va_end(args);
-	OutputDebugString(buffer);	
+	printf("%s\n",buffer);	
 }
 #endif
 
@@ -524,7 +524,7 @@ __asm	pmaxub		max3,				reg				\
 __asm	pmaxub		min3,				min2			\
 __asm	pminub		max3,				max2			\
 		minmax2sub(max1, max2, min2, min1, reg)
-
+/*
 void	SSE_RemoveGrain4(BYTE *dp, int dpitch, const BYTE *_sp, int spitch, int hblocks, int remainder, int incpitch, int height)
 {	
 __asm	mov			eax,				hblocks
@@ -2351,7 +2351,7 @@ static	const __declspec(align(SSE_INCREMENT)) unsigned short	convolution_bias[SS
 		,8,8,8,8
 #endif
 	};
-
+*/
 void	SSE_RemoveGrain11(BYTE *dp, int dpitch, const BYTE *_sp, int spitch, int hblocks, int remainder, int incpitch, int height)
 {
 #ifdef	CVERSION
@@ -2950,8 +2950,8 @@ void	smartbob_bottom(BYTE *dp, int dpitch, const BYTE *_sp, int spitch, int hblo
 	SmartBob(dp, dpitch, _sp, spitch, hblocks, remainder, incpitch, (height + 1)/2);
 }
 
-#endif	// #ifndef	MODIFYPLUGIN
-
+//#endif	// #ifndef	MODIFYPLUGIN
+/*
 void	SmartRG(BYTE *dp, int dpitch, const BYTE *_sp, int spitch, int hblocks, int remainder, int incpitch, int height)
 {
 __asm	mov			eax,				hblocks
@@ -4104,7 +4104,7 @@ static void	(*cleaning_methods[MAXMODE + 1])(BYTE *dp, int dpitch, const BYTE *s
 		= { copy_yv12, SSE_RemoveGrain1, SSE_RemoveGrain2, SSE_RemoveGrain3, SSE_RemoveGrain4, diag5, diag6, diag7, diag8, diag9
 			, SSE_RemoveGrain10, SSE_RemoveGrain11, SSE_RemoveGrain12, bob_top, bob_bottom, smartbob_top, smartbob_bottom, SmartRG, SSE_Repair18};
 #endif
-
+*/
 class	RemoveGrain : public GenericVideoFilter, public PlanarAccess
 {
 #ifdef	MODIFYPLUGIN
@@ -4116,13 +4116,13 @@ class	RemoveGrain : public GenericVideoFilter, public PlanarAccess
 
 private:
 
-	PVideoFrame __stdcall GetFrame(int n, avxsynth::IScriptEnvironment* env)
+	avxsynth::PVideoFrame __stdcall avxsynth::GetFrame(int n, avxsynth::IScriptEnvironment* env)
 	{
-		PVideoFrame sf = child->GetFrame(n, env);
+		avxsynth::PVideoFrame sf = child->avxsynth::GetFrame(n, env);
 #ifdef	MODIFYPLUGIN
-		PVideoFrame of = oclip->GetFrame(n, env);
+		avxsynth::PVideoFrame of = oclip->avxsynth::GetFrame(n, env);
 #endif
-		PVideoFrame df = env->NewVideoFrame(vi);
+		avxsynth::PVideoFrame df = env->NewVideoFrame(vi);
 		
 		int	i = planes; 
 		do
@@ -4274,14 +4274,14 @@ class	TemporalRepair : public GenericVideoFilter, public PlanarAccess
 	unsigned		last_frame;
 	PClip			orig;
 	
-	PVideoFrame __stdcall GetFrame(int n, avxsynth::IScriptEnvironment* env)
+	avxsynth::PVideoFrame __stdcall avxsynth::GetFrame(int n, avxsynth::IScriptEnvironment* env)
 	{
-		if( ((unsigned)(n - 1) >= last_frame) ) return child->GetFrame(n, env);
-		PVideoFrame	pf = orig->GetFrame(n - 1, env);
-		PVideoFrame	sf = orig->GetFrame(n, env);
-		PVideoFrame	nf = orig->GetFrame(n + 1, env);
-		PVideoFrame cf = child->GetFrame(n, env);
-		PVideoFrame	df = env->NewVideoFrame(vi);
+		if( ((unsigned)(n - 1) >= last_frame) ) return child->avxsynth::GetFrame(n, env);
+		avxsynth::PVideoFrame	pf = orig->avxsynth::GetFrame(n - 1, env);
+		avxsynth::PVideoFrame	sf = orig->avxsynth::GetFrame(n, env);
+		avxsynth::PVideoFrame	nf = orig->avxsynth::GetFrame(n + 1, env);
+		avxsynth::PVideoFrame cf = child->avxsynth::GetFrame(n, env);
+		avxsynth::PVideoFrame	df = env->NewVideoFrame(vi);
 
 		int i = planes;
 		do
@@ -4687,14 +4687,14 @@ class SmoothTemporalRepair : public GenericVideoFilter, public PlanarAccess
 	int		height2[3], hblocks[3], remainder[3];
 	unsigned		last_frame;
 
-	PVideoFrame __stdcall GetFrame(int n, avxsynth::IScriptEnvironment* env)
+	avxsynth::PVideoFrame __stdcall avxsynth::GetFrame(int n, avxsynth::IScriptEnvironment* env)
 	{
-		if( ((unsigned)(n - 1) >= last_frame) ) return child->GetFrame(n, env);
-		PVideoFrame sf = child->GetFrame(n, env);
-		PVideoFrame pf = oclip->GetFrame(n - 1, env);
-		PVideoFrame of = oclip->GetFrame(n, env);
-		PVideoFrame nf = oclip->GetFrame(n + 1, env);
-		PVideoFrame df = env->NewVideoFrame(vi);
+		if( ((unsigned)(n - 1) >= last_frame) ) return child->avxsynth::GetFrame(n, env);
+		avxsynth::PVideoFrame sf = child->avxsynth::GetFrame(n, env);
+		avxsynth::PVideoFrame pf = oclip->avxsynth::GetFrame(n - 1, env);
+		avxsynth::PVideoFrame of = oclip->avxsynth::GetFrame(n, env);
+		avxsynth::PVideoFrame nf = oclip->avxsynth::GetFrame(n + 1, env);
+		avxsynth::PVideoFrame df = env->NewVideoFrame(vi);
 		
 		int	i = planes;
 		do
@@ -4913,21 +4913,21 @@ static void clense(BYTE *dp, int dpitch, const BYTE *_sp, int spitch, const BYTE
 
 class	Clense : public GenericClense
 {
-	PVideoFrame		lframe;
+	avxsynth::PVideoFrame		lframe;
 	unsigned		lnr;
 	bool			reduceflicker;
 
-	PVideoFrame __stdcall GetFrame(int n, avxsynth::IScriptEnvironment* env)
+	avxsynth::PVideoFrame __stdcall avxsynth::GetFrame(int n, avxsynth::IScriptEnvironment* env)
 	{
 		if( !reduceflicker || (lnr != n-1) )
 		{
-			if( n == 0 ) return child->GetFrame(n, env);
-			lframe = child->GetFrame(n - 1, env);
+			if( n == 0 ) return child->avxsynth::GetFrame(n, env);
+			lframe = child->avxsynth::GetFrame(n - 1, env);
 		} 
-		PVideoFrame	sf = child->GetFrame(n, env);
+		avxsynth::PVideoFrame	sf = child->avxsynth::GetFrame(n, env);
 		if( n >= vi.num_frames ) return sf;
-		PVideoFrame	nf = child->GetFrame(n + 1, env);
-		PVideoFrame	df = env->NewVideoFrame(vi, 2*SSE_INCREMENT);
+		avxsynth::PVideoFrame	nf = child->avxsynth::GetFrame(n + 1, env);
+		avxsynth::PVideoFrame	df = env->NewVideoFrame(vi, 2*SSE_INCREMENT);
 		int i = planes;
 		do
 		{
@@ -4958,12 +4958,12 @@ class	BMCClense : public GenericClense
 {
 	PClip			pclip, nclip;
 
-	PVideoFrame __stdcall GetFrame(int n, avxsynth::IScriptEnvironment* env)
+	avxsynth::PVideoFrame __stdcall avxsynth::GetFrame(int n, avxsynth::IScriptEnvironment* env)
 	{
-		PVideoFrame	pf = pclip->GetFrame(n, env);
-		PVideoFrame	sf = child->GetFrame(n, env);
-		PVideoFrame	nf = nclip->GetFrame(n, env);
-		PVideoFrame	df = env->NewVideoFrame(vi, 2*SSE_INCREMENT);
+		avxsynth::PVideoFrame	pf = pclip->avxsynth::GetFrame(n, env);
+		avxsynth::PVideoFrame	sf = child->avxsynth::GetFrame(n, env);
+		avxsynth::PVideoFrame	nf = nclip->avxsynth::GetFrame(n, env);
+		avxsynth::PVideoFrame	df = env->NewVideoFrame(vi, 2*SSE_INCREMENT);
 		int i = planes;
 		do
 		{
@@ -5140,14 +5140,14 @@ static void sclense(BYTE *dp, int dpitch, const BYTE *_sp, int spitch, const BYT
 
 class	BackwardClense : public GenericClense
 {	
-	PVideoFrame __stdcall GetFrame(int n, avxsynth::IScriptEnvironment* env)
+	avxsynth::PVideoFrame __stdcall avxsynth::GetFrame(int n, avxsynth::IScriptEnvironment* env)
 	{
-		PVideoFrame	sf = child->GetFrame(n, env);
+		avxsynth::PVideoFrame	sf = child->avxsynth::GetFrame(n, env);
 		if( n < 2 ) return sf;
 		
-		PVideoFrame	next1 = child->GetFrame(n - 1, env);
-		PVideoFrame	next2 = child->GetFrame(n - 2, env);
-		PVideoFrame	df = env->NewVideoFrame(vi, 2*SSE_INCREMENT);
+		avxsynth::PVideoFrame	next1 = child->avxsynth::GetFrame(n - 1, env);
+		avxsynth::PVideoFrame	next2 = child->avxsynth::GetFrame(n - 2, env);
+		avxsynth::PVideoFrame	df = env->NewVideoFrame(vi, 2*SSE_INCREMENT);
 		int i = planes;
 		do
 		{
@@ -5166,14 +5166,14 @@ public:
 class	ForwardClense : public BackwardClense
 {	
 	int	lastnr;
-	PVideoFrame __stdcall GetFrame(int n, avxsynth::IScriptEnvironment* env)
+	avxsynth::PVideoFrame __stdcall avxsynth::GetFrame(int n, avxsynth::IScriptEnvironment* env)
 	{
-		PVideoFrame	sf = child->GetFrame(n, env);
+		avxsynth::PVideoFrame	sf = child->avxsynth::GetFrame(n, env);
 		if( n >= lastnr ) return sf;
 		
-		PVideoFrame	next1 = child->GetFrame(n + 1, env);
-		PVideoFrame	next2 = child->GetFrame(n + 2, env);
-		PVideoFrame	df = env->NewVideoFrame(vi, 2*SSE_INCREMENT);
+		avxsynth::PVideoFrame	next1 = child->avxsynth::GetFrame(n + 1, env);
+		avxsynth::PVideoFrame	next2 = child->avxsynth::GetFrame(n + 2, env);
+		avxsynth::PVideoFrame	df = env->NewVideoFrame(vi, 2*SSE_INCREMENT);
 		int i = planes;
 		do
 		{
