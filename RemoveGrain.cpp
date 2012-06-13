@@ -55,7 +55,7 @@ static	avxsynth::IScriptEnvironment	*AVSenvironment;
 #if		ISSE > 1			
 #define	CPUFLAGS		CPUF_SSE2
 #else
-#define	CPUFLAGS		CPUF_INTEGER_SSE
+#define	CPUFLAGS		avxsynth:::CPUF_INTEGER_SSE
 #endif
 
 #ifdef	MODIFYPLUGIN
@@ -4105,10 +4105,10 @@ static void	(*cleaning_methods[MAXMODE + 1])(BYTE *dp, int dpitch, const BYTE *s
 			, SSE_RemoveGrain10, SSE_RemoveGrain11, SSE_RemoveGrain12, bob_top, bob_bottom, smartbob_top, smartbob_bottom, SmartRG, SSE_Repair18};
 #endif
 */
-class	RemoveGrain : public GenericVideoFilter, public PlanarAccess
+class	RemoveGrain : public avxsynth::GenericVideoFilter, public PlanarAccess
 {
 #ifdef	MODIFYPLUGIN
-	PClip	oclip;
+	avxsynth::PClip	oclip;
 #endif
 	
 	int		height2[3], hblocks[3], remainder[3], incpitch[3];
@@ -4151,20 +4151,20 @@ private:
 	}
 public:
 #ifdef	MODIFYPLUGIN
-	RemoveGrain(PClip clip, PClip _oclip, int *mode, bool planar) : GenericVideoFilter(clip), PlanarAccess(vi), oclip(_oclip)
+	RemoveGrain(avxsynth::PClip clip, avxsynth::PClip _oclip, int *mode, bool planar) : avxsynth::GenericVideoFilter(clip), PlanarAccess(vi), oclip(_oclip)
 #else
-	RemoveGrain(PClip clip, int *mode, bool planar) : GenericVideoFilter(clip), PlanarAccess(vi)
+	RemoveGrain(avxsynth::PClip clip, int *mode, bool planar) : avxsynth::GenericVideoFilter(clip), PlanarAccess(vi)
 #endif
 	{
 		if( vi.IsYV12() + planar == 0 )
 #ifdef	MODIFYPLUGIN
 			AVSenvironment->ThrowError("Repair: only planar color spaces are supported");
 		CompareVideoInfo(vi, oclip->GetVideoInfo(), "Repair");;
-		oclip->SetCacheHints(CACHE_NOTHING, 0);
+		oclip->SetCacheHints(avxsynth::CACHE_NOTHING, 0);
 #else
 			AVSenvironment->ThrowError("RemoveGrain: only planar color spaces are supported");
 #endif
-		child->SetCacheHints(CACHE_NOTHING, 0);
+		child->SetCacheHints(avxsynth::CACHE_NOTHING, 0);
 
 		if( mode[2] < 0 )
 		{
@@ -4198,7 +4198,7 @@ public:
 };
 
 
-AVSValue __cdecl CreateRemoveGrain(AVSValue args, void* user_data, avxsynth::IScriptEnvironment* env)
+avxsynth::AVSValue __cdecl CreateRemoveGrain(avxsynth::AVSValue args, void* user_data, avxsynth::IScriptEnvironment* env)
 {
 #ifdef	MODIFYPLUGIN
 	enum ARGS { CLIP, OCLIP, MY, MU, MV, PLANAR};
@@ -4269,10 +4269,10 @@ __asm	dec			height
 __asm	jnz			_loop
 }
 
-class	TemporalRepair : public GenericVideoFilter, public PlanarAccess
+class	TemporalRepair : public avxsynth::GenericVideoFilter, public PlanarAccess
 {
 	unsigned		last_frame;
-	PClip			orig;
+	avxsynth::PClip			orig;
 	
 	avxsynth::PVideoFrame __stdcall avxsynth::GetFrame(int n, avxsynth::IScriptEnvironment* env)
 	{
@@ -4296,11 +4296,11 @@ class	TemporalRepair : public GenericVideoFilter, public PlanarAccess
 	}
 
 public:
-	TemporalRepair(PClip clip, PClip oclip, bool grey, bool planar) : GenericVideoFilter(clip), PlanarAccess(vi, planar && grey), orig(oclip)
+	TemporalRepair(avxsynth::PClip clip, avxsynth::PClip oclip, bool grey, bool planar) : avxsynth::GenericVideoFilter(clip), PlanarAccess(vi, planar && grey), orig(oclip)
 	{
 		CompareVideoInfo(vi, orig->GetVideoInfo(), "TemporalRepair");
-		child->SetCacheHints(CACHE_RANGE, 0);
-		orig->SetCacheHints(CACHE_RANGE, 2);
+		child->SetCacheHints(avxsynth::CACHE_RANGE, 0);
+		orig->SetCacheHints(avxsynth::CACHE_RANGE, 2);
 		last_frame = vi.num_frames - 2;
 		if( (int) last_frame < 0 ) last_frame = 0;
 		if( grey ) planes = 0;
@@ -4674,7 +4674,7 @@ __asm	jnz			middle_loop
 }
 #endif	// SMOOTH2
 
-class SmoothTemporalRepair : public GenericVideoFilter, public PlanarAccess
+class SmoothTemporalRepair : public avxsynth::GenericVideoFilter, public PlanarAccess
 {
 	HomogeneousChild	oclip;
 
@@ -4709,12 +4709,12 @@ class SmoothTemporalRepair : public GenericVideoFilter, public PlanarAccess
 		return df;
 	}
 public:
-	SmoothTemporalRepair(PClip clip, PClip _oclip, bool grey, int smooth, bool planar, avxsynth::IScriptEnvironment* env) : GenericVideoFilter(clip), PlanarAccess(vi), oclip(_oclip, grey, env)
+	SmoothTemporalRepair(avxsynth::PClip clip, avxsynth::PClip _oclip, bool grey, int smooth, bool planar, avxsynth::IScriptEnvironment* env) : avxsynth::GenericVideoFilter(clip), PlanarAccess(vi), oclip(_oclip, grey, env)
 	{
 		if( vi.IsYV12() + planar == 0 ) AVSenvironment->ThrowError("TemporalRepair: only planar color spaces are supported");
 		CompareVideoInfo(vi, _oclip->GetVideoInfo(), "TemporalRepair");
-		_oclip->SetCacheHints(CACHE_RANGE, 2);
-		child->SetCacheHints(CACHE_NOTHING, 0);
+		_oclip->SetCacheHints(avxsynth::CACHE_RANGE, 2);
+		child->SetCacheHints(avxsynth::CACHE_NOTHING, 0);
 
 #ifdef	SMOOTH2	
 		switch( smooth )
@@ -4751,21 +4751,21 @@ public:
 	//~SmoothTemporalRepair(){}
 };
 
-AVSValue __cdecl CreateTemporalRepair(AVSValue args, void* user_data, avxsynth::IScriptEnvironment* env)
+avxsynth::AVSValue __cdecl CreateTemporalRepair(avxsynth::AVSValue args, void* user_data, avxsynth::IScriptEnvironment* env)
 {
 	enum ARGS { CLIP, OCLIP, SMOOTH, GREY, PLANAR };
-	PClip	clip = args[CLIP].AsClip();
-	PClip	oclip = args[OCLIP].AsClip();
+	avxsynth::PClip	clip = args[CLIP].AsClip();
+	avxsynth::PClip	oclip = args[OCLIP].AsClip();
 	bool	grey = args[GREY].AsBool(false);
 	int		smooth = args[SMOOTH].AsInt(0);
 	bool	planar = args[PLANAR].AsBool(false);
-	return	smooth ? (AVSValue) new SmoothTemporalRepair(clip, oclip, grey, smooth, planar, env)
-										: (AVSValue) new TemporalRepair(clip, oclip, grey, planar);
+	return	smooth ? (avxsynth::AVSValue) new SmoothTemporalRepair(clip, oclip, grey, smooth, planar, env)
+										: (avxsynth::AVSValue) new TemporalRepair(clip, oclip, grey, planar);
 };
 
 #else	// MODIFYPLUGIN
 
-class	GenericClense : public GenericVideoFilter, public PlanarAccess
+class	GenericClense : public avxsynth::GenericVideoFilter, public PlanarAccess
 {
 protected:
 	int	hblocks[3];
@@ -4773,10 +4773,10 @@ protected:
 	int	incpitch[3];
 	
 public:
-	GenericClense(PClip clip, bool grey, bool planar);
+	GenericClense(avxsynth::PClip clip, bool grey, bool planar);
 };
 
-GenericClense::GenericClense(PClip clip, bool grey, bool planar) : GenericVideoFilter(clip), PlanarAccess(vi, planar && grey)
+GenericClense::GenericClense(avxsynth::PClip clip, bool grey, bool planar) : avxsynth::GenericVideoFilter(clip), PlanarAccess(vi, planar && grey)
 {
 	if( grey ) planes = 0;
 	int	i = planes;
@@ -4939,16 +4939,16 @@ class	Clense : public GenericClense
 		return df;
 	}
 public:
-	Clense(PClip clip, bool grey, bool _reduceflicker, bool planar, int cache) 
+	Clense(avxsynth::PClip clip, bool grey, bool _reduceflicker, bool planar, int cache) 
 		: GenericClense(clip, grey, planar), reduceflicker(_reduceflicker), lframe(0), lnr(-2)
 	{
-		if( cache >= 0 ) child->SetCacheHints(CACHE_RANGE, cache);
+		if( cache >= 0 ) child->SetCacheHints(avxsynth::CACHE_RANGE, cache);
 	}
 
 	//~Clense(){}
 };
 
-AVSValue __cdecl CreateClense(AVSValue args, void* user_data, avxsynth::IScriptEnvironment* env)
+avxsynth::AVSValue __cdecl CreateClense(avxsynth::AVSValue args, void* user_data, avxsynth::IScriptEnvironment* env)
 {
 	enum ARGS { CLIP, GREY, FLICKER, PLANAR, CACHE };
 	return new Clense(args[CLIP].AsClip(), args[GREY].AsBool(false), args[FLICKER].AsBool(true), args[PLANAR].AsBool(false), args[CACHE].AsInt(2));
@@ -4956,11 +4956,11 @@ AVSValue __cdecl CreateClense(AVSValue args, void* user_data, avxsynth::IScriptE
 
 class	BMCClense : public GenericClense
 {
-	PClip			pclip, nclip;
+	avxsynth::PClip			avxsynth::PClip, nclip;
 
 	avxsynth::PVideoFrame __stdcall avxsynth::GetFrame(int n, avxsynth::IScriptEnvironment* env)
 	{
-		avxsynth::PVideoFrame	pf = pclip->avxsynth::GetFrame(n, env);
+		avxsynth::PVideoFrame	pf = avxsynth::PClip->avxsynth::GetFrame(n, env);
 		avxsynth::PVideoFrame	sf = child->avxsynth::GetFrame(n, env);
 		avxsynth::PVideoFrame	nf = nclip->avxsynth::GetFrame(n, env);
 		avxsynth::PVideoFrame	df = env->NewVideoFrame(vi, 2*SSE_INCREMENT);
@@ -4973,19 +4973,19 @@ class	BMCClense : public GenericClense
 		return df;
 	}
 public:
-	BMCClense(PClip clip, PClip _pclip, PClip _nclip, bool grey, bool planar) : GenericClense(clip, grey, planar), pclip(_pclip), nclip(_nclip)
+	BMCClense(avxsynth::PClip clip, avxsynth::PClip _pclip, avxsynth::PClip _nclip, bool grey, bool planar) : GenericClense(clip, grey, planar), avxsynth::PClip(_pclip), nclip(_nclip)
 	{
-		child->SetCacheHints(CACHE_RANGE, 0);
-		pclip->SetCacheHints(CACHE_RANGE, 0);
-		nclip->SetCacheHints(CACHE_RANGE, 0);
-		CompareVideoInfo(vi, pclip->GetVideoInfo(), "MCClense");
+		child->SetCacheHints(avxsynth::CACHE_RANGE, 0);
+		avxsynth::PClip->SetCacheHints(avxsynth::CACHE_RANGE, 0);
+		nclip->SetCacheHints(avxsynth::CACHE_RANGE, 0);
+		CompareVideoInfo(vi, avxsynth::PClip->GetVideoInfo(), "MCClense");
 		CompareVideoInfo(vi, nclip->GetVideoInfo(), "MCClense");
 	}
 
 	//~BMCClense(){}
 };
 
-AVSValue __cdecl CreateMCClense(AVSValue args, void* user_data, avxsynth::IScriptEnvironment* env)
+avxsynth::AVSValue __cdecl CreateMCClense(avxsynth::AVSValue args, void* user_data, avxsynth::IScriptEnvironment* env)
 {
 	return new BMCClense(args[0].AsClip(), args[1].AsClip(), args[2].AsClip(), args[3].AsBool(false), args[4].AsBool(false));
 };
@@ -5157,9 +5157,9 @@ class	BackwardClense : public GenericClense
 		return df;
 	}
 public:
-	BackwardClense(PClip clip, bool grey, bool planar, int cache) : GenericClense(clip, grey, planar)
+	BackwardClense(avxsynth::PClip clip, bool grey, bool planar, int cache) : GenericClense(clip, grey, planar)
 	{
-		if( cache >= 0 ) child->SetCacheHints(CACHE_RANGE, cache);
+		if( cache >= 0 ) child->SetCacheHints(avxsynth::CACHE_RANGE, cache);
 	}
 };
 
@@ -5183,19 +5183,19 @@ class	ForwardClense : public BackwardClense
 		return df;
 	}
 public:
-	ForwardClense(PClip clip, bool grey, bool planar, int cache) : BackwardClense(clip, grey, planar, cache), lastnr(vi.num_frames - 2)
+	ForwardClense(avxsynth::PClip clip, bool grey, bool planar, int cache) : BackwardClense(clip, grey, planar, cache), lastnr(vi.num_frames - 2)
 	{}
 };
 
 char	clenseargs[] ="c[grey]b[planar]b[cache]i";
 
-AVSValue __cdecl CreateBackwardClense(AVSValue args, void* user_data, avxsynth::IScriptEnvironment* env)
+avxsynth::AVSValue __cdecl CreateBackwardClense(avxsynth::AVSValue args, void* user_data, avxsynth::IScriptEnvironment* env)
 {
 	enum ARGS { CLIP, GREY, PLANAR, CACHE };
 	return new BackwardClense(args[CLIP].AsClip(), args[GREY].AsBool(false), args[PLANAR].AsBool(false), args[CACHE].AsInt(2));
 };
 
-AVSValue __cdecl CreateForwardClense(AVSValue args, void* user_data, avxsynth::IScriptEnvironment* env)
+avxsynth::AVSValue __cdecl CreateForwardClense(avxsynth::AVSValue args, void* user_data, avxsynth::IScriptEnvironment* env)
 {
 	enum ARGS { CLIP, GREY, PLANAR, CACHE };
 	return new ForwardClense(args[CLIP].AsClip(), args[GREY].AsBool(false), args[PLANAR].AsBool(false), args[CACHE].AsInt(2));
